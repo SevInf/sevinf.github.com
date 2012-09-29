@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: About | Harmless Programmer]]></title>
+  <link href="http://sevinf.github.com/blog/categories/about/atom.xml" rel="self"/>
+  <link href="http://sevinf.github.com/"/>
+  <updated>2012-09-29T12:09:33+03:00</updated>
+  <id>http://sevinf.github.com/</id>
+  <author>
+    <name><![CDATA[Sergej Tatarincev]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Intro]]></title>
+    <link href="http://sevinf.github.com/blog/2012/09/29/intro/"/>
+    <updated>2012-09-29T11:50:00+03:00</updated>
+    <id>http://sevinf.github.com/blog/2012/09/29/intro</id>
+    <content type="html"><![CDATA[<p>Hi everyone! This is my first blog post.
+Who am I? I'm a software engineer at <a href="http://bekitzur.com/">BeKitzur</a> (site under construction at the moment).
+I work on various projects, mostly mobile apps. I code in Objective-C, Java, JS (browsers and node.js). I also
+make short video games occasionally, but this is more hobby than a professional activity. Here is two games which
+I made in collaboration with a few great people for ludum dare
+competition:</p>
+
+<ul>
+<li><a href="http://www.ludumdare.com/compo/minild-35/?action=preview&amp;uid=13588">Mazes In The Sky</a>;</li>
+<li><a href="http://www.ludumdare.com/compo/ludum-dare-24/?action=preview&amp;uid=13588">Super Darwin</a>.</li>
+</ul>
+
+
+<p>So the blog will mostly about it - mobile development, javascript, node and simple game development.
+I don't expect to post frequently - I rarely have an idea for a good technical article. But hope you find
+something useful here anyway.</p>
+]]></content>
+  </entry>
+  
+</feed>
