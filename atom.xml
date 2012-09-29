@@ -4,7 +4,7 @@
   <title><![CDATA[Harmless Programmer]]></title>
   <link href="http://SevInf.github.com/atom.xml" rel="self"/>
   <link href="http://SevInf.github.com/"/>
-  <updated>2012-09-29T18:44:59+03:00</updated>
+  <updated>2012-09-29T18:54:33+03:00</updated>
   <id>http://SevInf.github.com/</id>
   <author>
     <name><![CDATA[Sergej Tatarincev]]></name>
@@ -543,7 +543,7 @@ interested in.</p>
 <h2>Useful links</h2>
 
 <ul>
-<li><a href="">Source code for the tutorial</a>;</li>
+<li><a href="https://github.com/SevInf/esprima-tutorial">Source code for the tutorial</a>;</li>
 <li><a href="http://esprima.org/">Esprima library</a>;</li>
 <li><a href="https://developer.mozilla.org/en-US/docs/SpiderMonkey/Parser_API">SpiderMonkey Parser API</a>;</li>
 <li><a href="http://esprima.org/demo/parse.html">Online parser demo</a>.</li>
