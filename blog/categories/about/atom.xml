@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: About | Harmless Programmer]]></title>
-  <link href="http://sevinf.github.com/blog/categories/about/atom.xml" rel="self"/>
-  <link href="http://sevinf.github.com/"/>
-  <updated>2012-09-29T12:09:33+03:00</updated>
-  <id>http://sevinf.github.com/</id>
+  <link href="http://SevInf.github.com/blog/categories/about/atom.xml" rel="self"/>
+  <link href="http://SevInf.github.com/"/>
+  <updated>2012-09-29T18:44:59+03:00</updated>
+  <id>http://SevInf.github.com/</id>
   <author>
     <name><![CDATA[Sergej Tatarincev]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Intro]]></title>
-    <link href="http://sevinf.github.com/blog/2012/09/29/intro/"/>
+    <link href="http://SevInf.github.com/blog/2012/09/29/intro/"/>
     <updated>2012-09-29T11:50:00+03:00</updated>
-    <id>http://sevinf.github.com/blog/2012/09/29/intro</id>
+    <id>http://SevInf.github.com/blog/2012/09/29/intro</id>
     <content type="html"><![CDATA[<p>Hi everyone! This is my first blog post.
 Who am I? I'm a software engineer at <a href="http://bekitzur.com/">BeKitzur</a> (site under construction at the moment).
 I work on various projects, mostly mobile apps. I code in Objective-C, Java, JS (browsers and node.js). I also

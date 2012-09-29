@@ -1,15 +1,19 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <urlset xmlns='http://www.sitemaps.org/schemas/sitemap/0.9'>
     <url>
-        <loc>http://sevinf.github.com/blog/2012/09/29/intro/</loc>
+        <loc>http://SevInf.github.com/blog/2012/09/29/intro/</loc>
         <lastmod>2012-09-29T12:09:33+03:00</lastmod>
     </url>
     <url>
-        <loc>http://sevinf.github.com/blog/archives/</loc>
-        <lastmod>2012-09-29T12:09:33+03:00</lastmod>
+        <loc>http://SevInf.github.com/blog/2012/09/29/esprima-tutorial/</loc>
+        <lastmod>2012-09-29T18:44:52+03:00</lastmod>
     </url>
     <url>
-        <loc>http://sevinf.github.com/</loc>
-        <lastmod>2012-09-29T12:09:33+03:00</lastmod>
+        <loc>http://SevInf.github.com/blog/archives/</loc>
+        <lastmod>2012-09-29T18:44:52+03:00</lastmod>
+    </url>
+    <url>
+        <loc>http://SevInf.github.com/</loc>
+        <lastmod>2012-09-29T18:44:52+03:00</lastmod>
     </url>
 </urlset>
