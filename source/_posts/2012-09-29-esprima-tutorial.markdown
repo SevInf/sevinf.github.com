@@ -352,7 +352,7 @@ interested in.
 
 ## Useful links
 
-* [Source code for the tutorial]();
+* [Source code for the tutorial](https://github.com/SevInf/esprima-tutorial);
 * [Esprima library](http://esprima.org/);
 * [SpiderMonkey Parser API](https://developer.mozilla.org/en-US/docs/SpiderMonkey/Parser_API);
 * [Online parser demo](http://esprima.org/demo/parse.html).
