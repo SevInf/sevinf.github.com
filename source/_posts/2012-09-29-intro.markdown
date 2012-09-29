@@ -1,0 +1,21 @@
+---
+layout: post
+title: "Intro"
+date: 2012-09-29 11:50
+comments: true
+categories: About 
+---
+
+Hi everyone! This is my first blog post.
+Who am I? I'm a software engineer at [BeKitzur](http://bekitzur.com/) (site under construction at the moment).
+I work on various projects, mostly mobile apps. I code in Objective-C, Java, JS (browsers and node.js). I also 
+make short video games occasionally, but this is more hobby than a professional activity. Here is two games which
+I made in collaboration with a few great people for ludum dare 
+competition:
+
+* [Mazes In The Sky](http://www.ludumdare.com/compo/minild-35/?action=preview&uid=13588);
+* [Super Darwin](http://www.ludumdare.com/compo/ludum-dare-24/?action=preview&uid=13588).
+
+So the blog will mostly about it - mobile development, javascript, node and simple game development.
+I don't expect to post frequently - I rarely have an idea for a good technical article. But hope you find
+something useful here anyway.
