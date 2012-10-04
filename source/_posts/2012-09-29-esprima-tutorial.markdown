@@ -24,26 +24,26 @@ simpler task will be enough to dive in.
 We will build a very simple static analyzer which will run from command line.
 It will warn about:
 
-1. Declared, but not called functions;
-2. Calls to undeclared functions;
-3. Functions declared multiple times.
+* Declared, but not called functions;
+* Calls to undeclared functions;
+* Functions declared multiple times.
 
 Of course, it's not intended for compelling with excellent [JSHint](http://www.jshint.com/) or any other static 
 analyzer. The only purpose it serves is to show you the basics of JS parsing using Esprima. The things that our 
 analyzer will NOT do:
 
-1. Recognize any form of function declaration except:
+* Recognize any form of function declaration except:
 ``` javascript
 function name(...) {
     ...
 }
 ```
-2. Recognize any form of function call except:
+* Recognize any form of function call except:
 ``` javascript
 name(...)
 ```
-3. Know something about imports, exports or predefined globals;
-4. Work with multiple files.
+* Know something about imports, exports or predefined globals;
+* Work with multiple files.
 
 This is not the flaws of a parser. All this features can be easily implemented, they are just out of scope of
 tutorial.
@@ -57,11 +57,9 @@ Each of following commands can also be done with GUI or Windows Shell, but I'll 
 OS terminal.
 Create a directory for your project and install the library:
 
-``` bash
-mkdir esprima-tutorial
-cd esprima-tutorial
-npm install esprima@0.9.9
-```
+    mkdir esprima-tutorial
+    cd esprima-tutorial
+    npm install esprima@0.9.9
 
 Create a script named analyze.js with the following content:
 
@@ -332,14 +330,14 @@ main();
 
 You should see something like this:
 
-``` bash
-Inf:esprima-tutorial$ node analyze.js test.js
-Reading test.js
-Function declaredTwice decalred multiple times
-Function undeclared undeclared
-Function unused declared but not called
-Done
-```
+
+    Inf:esprima-tutorial$ node analyze.js test.js
+    Reading test.js
+    Function declaredTwice decalred multiple times
+    Function undeclared undeclared
+    Function unused declared but not called
+    Done
+
 
 Of course, if you run it on some real code you will see all the flaws we discussed at the beginning of the 
 article. Again, point of the article is to teach how to use Esprima, not how to write static analyzers.
