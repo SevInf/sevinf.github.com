@@ -4,7 +4,7 @@
   <title><![CDATA[Harmless Programmer]]></title>
   <link href="http://SevInf.github.com/atom.xml" rel="self"/>
   <link href="http://SevInf.github.com/"/>
-  <updated>2012-09-30T13:57:31+03:00</updated>
+  <updated>2012-10-04T18:01:32+03:00</updated>
   <id>http://SevInf.github.com/</id>
   <author>
     <name><![CDATA[Sergej Tatarincev]]></name>
@@ -35,20 +35,20 @@ simpler task will be enough to dive in.</p>
 <p>We will build a very simple static analyzer which will run from command line.
 It will warn about:</p>
 
-<ol>
+<ul>
 <li>Declared, but not called functions;</li>
 <li>Calls to undeclared functions;</li>
 <li>Functions declared multiple times.</li>
-</ol>
+</ul>
 
 
 <p>Of course, it&#8217;s not intended for compelling with excellent <a href="http://www.jshint.com/">JSHint</a> or any other static
 analyzer. The only purpose it serves is to show you the basics of JS parsing using Esprima. The things that our
 analyzer will NOT do:</p>
 
-<ol>
+<ul>
 <li>Recognize any form of function declaration except:</li>
-</ol>
+</ul>
 
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
@@ -60,9 +60,9 @@ analyzer will NOT do:</p>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<ol>
+<ul>
 <li>Recognize any form of function call except:</li>
-</ol>
+</ul>
 
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
@@ -70,10 +70,10 @@ analyzer will NOT do:</p>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<ol>
+<ul>
 <li>Know something about imports, exports or predefined globals;</li>
 <li>Work with multiple files.</li>
-</ol>
+</ul>
 
 
 <p>This is not the flaws of a parser. All this features can be easily implemented, they are just out of scope of
@@ -88,14 +88,10 @@ Each of following commands can also be done with GUI or Windows Shell, but I&#82
 OS terminal.
 Create a directory for your project and install the library:</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>mkdir esprima-tutorial
-</span><span class='line'><span class="nb">cd </span>esprima-tutorial
-</span><span class='line'>npm install esprima@0.9.9
-</span></code></pre></td></tr></table></div></figure>
-
+<pre><code>mkdir esprima-tutorial
+cd esprima-tutorial
+npm install esprima@0.9.9
+</code></pre>
 
 <p>Create a script named analyze.js with the following content:</p>
 
@@ -516,20 +512,13 @@ Finally, add call to <code>processResults</code> to the bottom of <code>analyzeC
 
 <p>You should see something like this:</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>Inf:esprima-tutorial<span class="nv">$ </span>node analyze.js test.js
-</span><span class='line'>Reading test.js
-</span><span class='line'>Function declaredTwice decalred multiple <span class="nb">times</span>
-</span><span class='line'>Function undeclared undeclared
-</span><span class='line'>Function unused declared but not called
-</span><span class='line'>Done
-</span></code></pre></td></tr></table></div></figure>
-
+<pre><code>Inf:esprima-tutorial$ node analyze.js test.js
+Reading test.js
+Function declaredTwice decalred multiple times
+Function undeclared undeclared
+Function unused declared but not called
+Done
+</code></pre>
 
 <p>Of course, if you run it on some real code you will see all the flaws we discussed at the beginning of the
 article. Again, point of the article is to teach how to use Esprima, not how to write static analyzers.</p>

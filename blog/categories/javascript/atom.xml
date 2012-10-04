@@ -4,7 +4,7 @@
   <title><![CDATA[Category: javascript | Harmless Programmer]]></title>
   <link href="http://SevInf.github.com/blog/categories/javascript/atom.xml" rel="self"/>
   <link href="http://SevInf.github.com/"/>
-  <updated>2012-09-30T13:57:31+03:00</updated>
+  <updated>2012-10-04T18:01:32+03:00</updated>
   <id>http://SevInf.github.com/</id>
   <author>
     <name><![CDATA[Sergej Tatarincev]]></name>
@@ -35,22 +35,22 @@ simpler task will be enough to dive in.</p>
 <p>We will build a very simple static analyzer which will run from command line.
 It will warn about:</p>
 
-<ol>
+<ul>
 <li>Declared, but not called functions;</li>
 <li>Calls to undeclared functions;</li>
 <li>Functions declared multiple times.</li>
-</ol>
+</ul>
 
 
 <p>Of course, it's not intended for compelling with excellent <a href="http://www.jshint.com/">JSHint</a> or any other static
 analyzer. The only purpose it serves is to show you the basics of JS parsing using Esprima. The things that our
 analyzer will NOT do:</p>
 
-<ol>
+<ul>
 <li>Recognize any form of function declaration except:
 <code>javascript
 function name(...) {
- ...
+  ...
 }
 </code></li>
 <li>Recognize any form of function call except:
@@ -59,7 +59,7 @@ name(...)
 </code></li>
 <li>Know something about imports, exports or predefined globals;</li>
 <li>Work with multiple files.</li>
-</ol>
+</ul>
 
 
 <p>This is not the flaws of a parser. All this features can be easily implemented, they are just out of scope of
@@ -74,11 +74,10 @@ Each of following commands can also be done with GUI or Windows Shell, but I'll 
 OS terminal.
 Create a directory for your project and install the library:</p>
 
-<p><code>bash
-mkdir esprima-tutorial
+<pre><code>mkdir esprima-tutorial
 cd esprima-tutorial
 npm install esprima@0.9.9
-</code></p>
+</code></pre>
 
 <p>Create a script named analyze.js with the following content:</p>
 
@@ -397,14 +396,13 @@ function declaredTwice() {
 
 <p>You should see something like this:</p>
 
-<p><code>bash
-Inf:esprima-tutorial$ node analyze.js test.js
+<pre><code>Inf:esprima-tutorial$ node analyze.js test.js
 Reading test.js
 Function declaredTwice decalred multiple times
 Function undeclared undeclared
 Function unused declared but not called
 Done
-</code></p>
+</code></pre>
 
 <p>Of course, if you run it on some real code you will see all the flaws we discussed at the beginning of the
 article. Again, point of the article is to teach how to use Esprima, not how to write static analyzers.</p>
