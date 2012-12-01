@@ -9,7 +9,8 @@
   <meta name="author" content="Sergej Tatarincev">
 
   
-  <meta name="description" content="Recently I had a task that sounded something like this: Get a JS code and generate some other JS code from it. The first part was most difficult. &hellip;">
+  <meta name="description" content="Since version 2.1 cocos2d-iphone comes with ability to write code in JavaScript.
+This allows you to write your code once and then reuse the code with &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -64,6 +65,56 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2012/12/01/extending-cocos2d-js-bindings-part-1-automatic-bindings/">Extending Cocos2d JS Bindings. Part 1: Automatic Bindings</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-12-01T11:07:00+02:00" pubdate data-updated="true">Dec 1<span>st</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Since version 2.1 <a href="http://www.cocos2d-iphone.org">cocos2d-iphone</a> comes with ability to write code in JavaScript.
+This allows you to write your code once and then reuse the code with cocos2d-x or cococs2d-html5.
+All cocos2d nodes, CocosDension, CocosBuilder reader and Chipmunk are supported. But what about third parties?
+Do we need to rewrite other great libraries in JS to use them? No. And here <a href="https://github.com/zynga/jsbindings">jsbindings</a> project comes for the rescue.</p>
+
+<p>While official documentation is pretty good to get started, there are few pitfalls when using this tool
+in real project. So, lets explore the process of binding generation step by step and allow JS coders to use
+<a href="https://github.com/vlidholt/CCBReader/tree/master/CCScrollView">CCScrollView</a>. At this tutorial we&#8217;ll explore
+automatic binding process and bind most of the CCScrollView methods to JS, next time we&#8217;ll focus on manual
+bindings and complete the rest.</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2012/12/01/extending-cocos2d-js-bindings-part-1-automatic-bindings/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
   
   
     <article>
@@ -175,6 +226,10 @@ something useful here anyway.</p>
     <section>
   <h1>Recent Posts</h1>
   <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2012/12/01/extending-cocos2d-js-bindings-part-1-automatic-bindings/">Extending cocos2d JS bindings. Part 1: automatic bindings</a>
+      </li>
     
       <li class="post">
         <a href="/blog/2012/09/29/esprima-tutorial/">Esprima tutorial</a>

@@ -4,7 +4,7 @@
   <title><![CDATA[Harmless Programmer]]></title>
   <link href="http://SevInf.github.com/atom.xml" rel="self"/>
   <link href="http://SevInf.github.com/"/>
-  <updated>2012-10-04T18:01:32+03:00</updated>
+  <updated>2012-12-01T19:32:14+02:00</updated>
   <id>http://SevInf.github.com/</id>
   <author>
     <name><![CDATA[Sergej Tatarincev]]></name>
@@ -12,6 +12,496 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Extending cocos2d JS bindings. Part 1: automatic bindings]]></title>
+    <link href="http://SevInf.github.com/blog/2012/12/01/extending-cocos2d-js-bindings-part-1-automatic-bindings/"/>
+    <updated>2012-12-01T11:07:00+02:00</updated>
+    <id>http://SevInf.github.com/blog/2012/12/01/extending-cocos2d-js-bindings-part-1-automatic-bindings</id>
+    <content type="html"><![CDATA[<p>Since version 2.1 <a href="http://www.cocos2d-iphone.org">cocos2d-iphone</a> comes with ability to write code in JavaScript.
+This allows you to write your code once and then reuse the code with cocos2d-x or cococs2d-html5.
+All cocos2d nodes, CocosDension, CocosBuilder reader and Chipmunk are supported. But what about third parties?
+Do we need to rewrite other great libraries in JS to use them? No. And here <a href="https://github.com/zynga/jsbindings">jsbindings</a> project comes for the rescue.</p>
+
+<p>While official documentation is pretty good to get started, there are few pitfalls when using this tool
+in real project. So, lets explore the process of binding generation step by step and allow JS coders to use
+<a href="https://github.com/vlidholt/CCBReader/tree/master/CCScrollView">CCScrollView</a>. At this tutorial we&#8217;ll explore
+automatic binding process and bind most of the CCScrollView methods to JS, next time we&#8217;ll focus on manual
+bindings and complete the rest.</p>
+
+<!-- more -->
+
+
+<h2>Preparations</h2>
+
+<p>We will be using <a href="http://www.cocos2d-iphone.org/archives/2084">cocos2d-iphone 2.1-beta3</a>.
+Download it and install Xcode templates if you haven&#8217;t yet. Create new &#8220;cocos2d iOS with JavaScript&#8221; project.</p>
+
+<p>Next download <a href="https://github.com/vlidholt/CCBReader">CCBReader project</a> and copy CCScrollView directory to <code>libs</code>
+folder in your project (same directory that contains cocos2d, CocosDension and other 3rd party libraries).</p>
+
+<p>Finally, download <a href="https://github.com/zynga/jsbindings/archive/release-0.3.zip">JSBindings 0.3</a> and place it
+somewhere on your computer. In following examples I&#8217;ll assume that its installed in home directory. If you have
+installed it somewhere else, don&#8217;t forget to replace <code>~/jsbingings</code> with your path when following further
+instructions.</p>
+
+<h2>Step 1: gen_bridge_metadata</h2>
+
+<p>As documentation suggests, step 1 is generating bridge support files for your project. Open terminal in
+<code>YOUR_PROJECT/libs/CCScrollView</code> directory and execute following command:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>gen_bridge_metadata -F complete --no-64-bit -c '-DNDEBUG -I.' *.h -o CCScrollView.bridgesupport</span></code></pre></td></tr></table></div></figure>
+
+
+<p>BridgeSupport is an xml file that describes C functions, ObjC classes, methods and their parameters, etc.
+<code>gen_bridge_metadata</code> script uses <a href="http://clang.llvm.org/doxygen/group__CINDEX.html">libclang</a> to parse Objective-C code and generate BridgeSupport files.</p>
+
+<p>If you look carefully through generated file you&#8217;ll see the first problems: all cocos2d classes like <code>CCNode</code>
+replaced with <code>id</code>. To fix this you&#8217;ll need to tell <code>gen_bridge_metadata</code> script to include cocos2d headers
+in search path. The <code>-c</code> options in above command allows to pass additional compiler arguments to libclang and
+<code>-I</code> compiler flag adds directory to compiler path. So, fixed version of the command will be:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>gen_bridge_metadata -F complete --no-64-bit -c '-DNDEBUG -I. -I../cocos2d' *.h -o CCScrollView.bridgesupport</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now BridgeSupport file should contain right types of parameters and properties.</p>
+
+<h2>Step 2: complement file</h2>
+
+<p>Second step is generating a complement file. Complement is a file with additional metadata not provided by
+BridgeSupport such as class hierarchy, protocols and properties. The command is:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>~/jsbindings/generate_complement.py -o CCScrollView-complement.txt *.h</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Script will tell you that it completed successfully, but don&#8217;t trust him: if you open the file it generated you&#8217;ll
+see that it contains no data.</p>
+
+<p>The problem is that CCScrollView files for some reason have Mac OS 9 line endings (CR) and <code>generate_complement</code>
+scripts expects Unix (LF). We can fix either the script, or convert file line endings. I choose the second path.
+Execute following commands from CCScrollView directory:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>vim -c ':e ++ff=mac | :setlocal ff=unix | :wq' CCScrollView.h
+</span><span class='line'>vim -c ':e ++ff=mac | :setlocal ff=unix | :wq' CCScrollView.m</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Let&#8217;s run a <code>generate_complement</code> command again:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>Inf:CCScrollView$ ~/jsbindings/generate_complement.py -o CCScrollView-complement.txt *.h
+</span><span class='line'>Traceback (most recent call last):
+</span><span class='line'>  File "/Users/Inf/jsbindings/generate_complement.py", line 183, in &lt;module&gt;
+</span><span class='line'>    instance.parse()
+</span><span class='line'>  File "/Users/Inf/jsbindings/generate_complement.py", line 97, in parse
+</span><span class='line'>    raise Exception("Fatal: Unparented attrib: %s (%s)" % (str(property_attribs.groups()), filename))
+</span><span class='line'>Exception: Fatal: Unparented attrib: ('nonatomic, assign', 'CGFloat', None, None, None, 'zoomScale') (CCScrollView.h)</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now the problem is the following: to parse code <code>generate_complement</code> uses set of regular expressions and they are
+very specific about code formatting. Again, the solution would be either to patch utility (the ideal variant would
+be using libclang instead of regexps) or fix the code formatting. Again, I choose the second variant.</p>
+
+<p>Open CCScrollView.h header and find <code>CCScrollViewDelegate</code> protocol declaration. Change it from this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='objective-c'><span class='line'><span class="k">@protocol</span> <span class="nc">CCScrollViewDelegate</span>
+</span><span class='line'><span class="o">&lt;</span>
+</span><span class='line'>          <span class="n">NSObject</span>
+</span><span class='line'><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>to this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='objective-c'><span class='line'><span class="k">@protocol</span> <span class="nc">CCScrollViewDelegate</span><span class="o">&lt;</span><span class="n">NSObject</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Then, change <code>CCScrollView</code> class declaration from this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='objective-c'><span class='line'><span class="k">@interface</span> <span class="nc">CCScrollView</span>
+</span><span class='line'>:          <span class="nc">CCLayer</span> <span class="p">{</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>to this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='objective-c'><span class='line'><span class="k">@interface</span> <span class="nc">CCScrollView</span>: <span class="nc">CCLayer</span> <span class="p">{</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Run the same command third time and you&#8217;ll finally get a complement file.</p>
+
+<h2>Step 3: Config file</h2>
+
+<p>Finally, lets write a config file and generate some bindings. Create <code>CCScrollView.jsb.ini</code> file in
+<code>libs/CCScrollView</code> directory with a following contents:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+</pre></td><td class='code'><pre><code class='objective-c'><span class='line'><span class="p">[</span><span class="n">CCScrollView</span><span class="p">]</span>
+</span><span class='line'>
+</span><span class='line'><span class="cp">#1</span>
+</span><span class='line'><span class="n">obj_class_prefix_to_remove</span> <span class="o">=</span> <span class="n">CC</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">classes_to_parse</span> <span class="o">=</span> <span class="n">CCScrollView</span>
+</span><span class='line'>
+</span><span class='line'><span class="cp">#2</span>
+</span><span class='line'><span class="n">class_properties</span> <span class="o">=</span> <span class="n">CCLayer</span> <span class="o">=</span> <span class="n">manual</span><span class="p">,</span>
+</span><span class='line'>                   <span class="n">CCNode</span> <span class="o">=</span> <span class="n">manual</span><span class="p">,</span>
+</span><span class='line'>                   <span class="n">NSObject</span> <span class="o">=</span> <span class="n">manual</span>
+</span><span class='line'>
+</span><span class='line'><span class="cp">#3</span>
+</span><span class='line'><span class="n">inherit_class_methods</span> <span class="o">=</span> <span class="n">Auto</span>
+</span><span class='line'>
+</span><span class='line'><span class="cp">#4</span>
+</span><span class='line'><span class="n">import_files</span> <span class="o">=</span> <span class="n">CCScrollView</span><span class="p">.</span><span class="n">h</span><span class="p">,</span> <span class="n">js_bindings_cocos2d_ios_classes</span><span class="p">.</span><span class="n">h</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">method_properties</span> <span class="o">=</span>
+</span><span class='line'><span class="cp">#5</span>
+</span><span class='line'>    <span class="n">CCScrollView</span> <span class="err">#</span> <span class="nl">viewWithViewSize:container:</span> <span class="o">=</span> <span class="nl">name:</span> <span class="s">&quot;create&quot;</span><span class="p">;</span> <span class="nl">merge:</span> <span class="s">&quot;viewWithViewSize:&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">CCScrollView</span> <span class="err">#</span> <span class="nl">initWithViewSize:container:</span> <span class="o">=</span> <span class="nl">name:</span> <span class="s">&quot;initWithViewSize&quot;</span><span class="p">;</span> <span class="nl">merge:</span> <span class="s">&quot;initWithViewSize:&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">CCScrollView</span> <span class="err">#</span> <span class="nl">setContentOffset:animated:</span> <span class="o">=</span> <span class="nl">name:</span> <span class="s">&quot;setContentOffset&quot;</span><span class="p">;</span> <span class="nl">merge:</span> <span class="s">&quot;setContentOffset:&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">CCScrollView</span> <span class="err">#</span> <span class="nl">setZoomScale:animated:</span> <span class="o">=</span> <span class="nl">name:</span> <span class="s">&quot;setZoomScale&quot;</span><span class="p">;</span> <span class="nl">merge:</span> <span class="s">&quot;setZoomScale:&quot;</span><span class="p">,</span>
+</span><span class='line'><span class="cp">#6</span>
+</span><span class='line'>    <span class="n">CCScrollView</span> <span class="err">#</span> <span class="nl">setContentOffset:animatedInDuration:</span> <span class="o">=</span> <span class="nl">name:</span> <span class="s">&quot;setContentOffsetInDuration&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">CCScrollView</span> <span class="err">#</span> <span class="nl">setZoomScale:animatedInDuration:</span> <span class="o">=</span>  <span class="nl">name:</span> <span class="s">&quot;setZoomScaleInDuration&quot;</span><span class="p">,</span>
+</span><span class='line'><span class="cp">#7</span>
+</span><span class='line'>    <span class="n">CCScrollView</span> <span class="err">#</span> <span class="n">delegate</span> <span class="o">=</span> <span class="n">ignore</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">CCScrollView</span> <span class="err">#</span> <span class="nl">setDelegate:</span> <span class="o">=</span> <span class="n">ignore</span>
+</span><span class='line'>
+</span><span class='line'><span class="cp">#8</span>
+</span><span class='line'><span class="n">struct_properties</span> <span class="o">=</span> <span class="n">CGPoint</span> <span class="o">=</span> <span class="n">manual</span><span class="p">,</span>
+</span><span class='line'>                    <span class="n">CGRect</span> <span class="o">=</span> <span class="n">manual</span><span class="p">,</span>
+</span><span class='line'>                    <span class="n">CGSize</span> <span class="o">=</span> <span class="n">manual</span>
+</span><span class='line'>
+</span><span class='line'><span class="cp">#9</span>
+</span><span class='line'><span class="n">bridge_support_file</span> <span class="o">=</span> <span class="n">CCScrollView</span><span class="p">.</span><span class="n">bridgesupport</span>
+</span><span class='line'><span class="n">complement_file</span> <span class="o">=</span> <span class="n">CCScrollView</span><span class="o">-</span><span class="n">complement</span><span class="p">.</span><span class="n">txt</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Explanations:</p>
+
+<ol>
+<li>We tell generator to remove CC prefix from class names. Later, we will register binded class under <code>cc</code>
+namespace, so <code>CCScrollView</code> will be accessible as <code>cc.ScrollView</code> in JS code;</li>
+<li>We tell that we already have manual bindings for <code>CCLayer</code>, <code>CCNode</code> and <code>NSObject</code>. Cocos2d bindings already
+covers this classes, but without this line generator will try to generate them again. <code>manual</code> option prevents
+generator from this behaviour while still allowing remaining code to use this classes;</li>
+<li>Generated bindings will inherit class methods from the base class until virst class constructor encoutered;</li>
+<li>All binding files will include two headers:
+
+<ol>
+<li><code>CCScrollView.h</code> to access our native class;</li>
+<li><code>js_bindings_cocos2d_ios_classes.h</code> to access bindings for <code>CCLayer</code>, <code>CCNode</code> and <code>NSObject</code>.</li>
+</ol>
+</li>
+<li>Two important things happens here:
+
+<ol>
+<li>Diffrent name for the methods in JS is set using <code>name</code> option. This allows to use JS-friendly names in
+our script code and brings comatability with
+<a href="https://github.com/cocos2d/cocos2d-html5/tree/master/extensions/GUI/CCScrollView">cocos2d-html5 implementation</a>;</li>
+<li>Multiple native methods are merged into single JS method using <code>merge</code> option. This makes sense for similar
+methods with different number of arguments. Glue code will choose appropriate native implementation based on
+the number of arguments passed to JS function. <strong>Note</strong>: method with largest number of argments should be on a
+left side of expression.</li>
+</ol>
+</li>
+<li>Just rename a few methods to be compatable with HTML5 version;</li>
+<li>Don&#8217;t generate bindings for delegate getter and setter. Currently, jsbindings can&#8217;t generate glue code for
+protocols. In the following article we change this setting to <code>manual</code> and write binding ourself, but for now we
+will just ignore the methods.</li>
+<li>Tell generator that we&#8217;ll have manual bindings for <code>CGPoint</code>, <code>CGRect</code> and <code>CGSize</code>. Similar to the manual
+classes above, cocos2d will provide this bindings. Without this bindings properties of this types could not be set
+or read from JavaScript.</li>
+<li>Setting the path to the BridgeSupport and complement files generated on previous steps.</li>
+</ol>
+
+
+<p>Now lets run binding generator:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='objective-c'><span class='line'><span class="o">~/</span><span class="n">jsbindings</span><span class="o">/</span><span class="n">generate_js_bindings</span><span class="p">.</span><span class="n">py</span> <span class="o">-</span><span class="n">c</span> <span class="n">CCScrollView</span><span class="p">.</span><span class="n">jsb</span><span class="p">.</span><span class="n">ini</span>
+</span><span class='line'><span class="n">NOT</span> <span class="nl">OK:</span> <span class="s">&quot;CCScrollView#delegate&quot;</span> <span class="nl">Error:</span> <span class="n">Explicitly</span> <span class="n">ignoring</span> <span class="n">method</span>
+</span><span class='line'><span class="n">NOT</span> <span class="nl">OK:</span> <span class="s">&quot;CCScrollView#initWithViewSize:&quot;</span> <span class="nl">Error:</span> <span class="n">Explicitly</span> <span class="n">ignoring</span> <span class="n">method</span>
+</span><span class='line'><span class="n">NOT</span> <span class="nl">OK:</span> <span class="s">&quot;CCScrollView#setContentOffset:&quot;</span> <span class="nl">Error:</span> <span class="n">Explicitly</span> <span class="n">ignoring</span> <span class="n">method</span>
+</span><span class='line'><span class="n">NOT</span> <span class="nl">OK:</span> <span class="s">&quot;CCScrollView#setDelegate:&quot;</span> <span class="nl">Error:</span> <span class="n">Explicitly</span> <span class="n">ignoring</span> <span class="n">method</span>
+</span><span class='line'><span class="n">NOT</span> <span class="nl">OK:</span> <span class="s">&quot;CCScrollView#setZoomScale:&quot;</span> <span class="nl">Error:</span> <span class="n">Explicitly</span> <span class="n">ignoring</span> <span class="n">method</span>
+</span><span class='line'><span class="n">NOT</span> <span class="nl">OK:</span> <span class="s">&quot;CCScrollView#viewWithViewSize:&quot;</span> <span class="nl">Error:</span> <span class="n">Explicitly</span> <span class="n">ignoring</span> <span class="n">method</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>For some reason it reports ignored methods as errors. Looks like a bug in <code>generate_js_bindings</code> script. Just
+ignore this errors for now, correct binding files will be generated anyway.</p>
+
+<h2>Step 4: Registration file</h2>
+
+<p>Now we need to create a function that will register our bindings with JS engine. This part is done
+manually.</p>
+
+<p>Create <code>js_bindings_CCScrollView_registration.h</code> with the following content:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='objective-c'><span class='line'><span class="cp">#ifndef __JSB_CCSCROLLVIEW_REGISTRATION</span>
+</span><span class='line'><span class="cp">#define __JSB_CCSCROLLVIEW_REGISTRATION</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">void</span> <span class="n">jsb_register_CCScrollView</span><span class="p">(</span> <span class="n">JSContext</span> <span class="o">*</span><span class="n">_cx</span><span class="p">,</span> <span class="n">JSObject</span> <span class="o">*</span><span class="n">globalO</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="cp">#endif</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Create Create <code>js_bindings_CCScrollView_registration.mm</code> with the following content:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='objective-c'><span class='line'><span class="cp">#import &quot;js_bindings_config.h&quot;</span>
+</span><span class='line'><span class="cp">#import &quot;js_bindings_core.h&quot;</span>
+</span><span class='line'><span class="cp">#import &quot;js_bindings_CCScrollView_classes.h&quot;</span>
+</span><span class='line'><span class="cp">#import &quot;js_bindings_CCScrollView_registration.h&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">void</span> <span class="nf">jsb_register_CCScrollView</span><span class="p">(</span> <span class="n">JSContext</span> <span class="o">*</span><span class="n">_cx</span><span class="p">,</span> <span class="n">JSObject</span> <span class="o">*</span><span class="n">globalO</span><span class="p">)</span> <span class="p">{</span> <span class="c1">//1</span>
+</span><span class='line'>    <span class="n">jsval</span> <span class="n">ns</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">JS_GetProperty</span><span class="p">(</span><span class="n">_cx</span><span class="p">,</span> <span class="n">globalO</span><span class="p">,</span> <span class="s">&quot;cc&quot;</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">ns</span><span class="p">);</span> <span class="c1">//2</span>
+</span><span class='line'>    <span class="n">JSObject</span><span class="o">*</span> <span class="n">CCScrollView</span> <span class="o">=</span> <span class="n">JSVAL_TO_OBJECT</span><span class="p">(</span><span class="n">ns</span><span class="p">);</span> <span class="c1">//3</span>
+</span><span class='line'><span class="cp">    </span>
+</span><span class='line'><span class="cp">#import &quot;js_bindings_CCScrollView_classes_registration.h&quot; </span><span class="c1">//4</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Some knowledge of <a href="https://developer.mozilla.org/en-US/docs/SpiderMonkey">Spider Monkey API</a> required to
+understand this code. We dive more deeply into JSAPI in the next article when we&#8217;ll be discussing manual bindings,
+now I give only breif explanation:</p>
+
+<ol>
+<li>Registration function receives two parameters:
+
+<ol>
+<li>JSContext - central part of JSAPI. It maintains call stack, contains global object and required by
+almost every JSAPI function.</li>
+<li>Global object - object, that contains all other objects, avaliable to the scripts. For example, <code>window</code>
+inside web browser is a global object for it.</li>
+</ol>
+</li>
+<li>Getting <code>cc</code> property from global object. This property is a namespace for cocos2d, it contains all other
+functions, classes and constants of the engine. We want to add ScrollView to the same namespace, so we need to get
+a reference to it. This code assumes that it will be called after cocos2d has been registered.</li>
+<li>Now, we have a namespace property, but it can have value of any type in JS: number, string, object, etc.
+Autegenerated registration functions require namespace to be an object named <code>CCScrollView</code> (generally,
+namespace variable should be the same as section header in config file). So, we convert the value to satisfy
+requirements.</li>
+<li>Importing files with autegenrated functions that register all the classes.</li>
+</ol>
+
+
+<h2>Step 5: Adding files to a project</h2>
+
+<p>Open Xcode project and add following files to it:
+* <code>js_bindings_CCScrollView_classes.h</code>;
+* <code>js_bindings_CCScrollView_classes.mm</code>;
+* <code>js_bindings_CCScrollView_classes_registration.h</code>;
+* <code>js_bindings_CCScrollView_registration.mm</code>;
+* <code>js_bindings_CCScrollView_registration.mm</code>.</p>
+
+<p>Open <code>libs/jsbindings/src/manual/js_bindings_config.h</code> and add following lines to it:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='objective-c'><span class='line'><span class="cp">#ifndef JSB_INCLUDE_CCSCROLLVIEW</span>
+</span><span class='line'><span class="cp">#define JSB_INCLUDE_CCSCROLLVIEW 1</span>
+</span><span class='line'><span class="cp">#endif</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This will enable compilation of our bindings.</p>
+
+<p>Open <code>libs/jsbindings/src/manual/js_bindings_core.mm</code> and add followig import to it:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='objective-c'><span class='line'><span class="cp">#import &quot;js_bindings_CCScrollView_registration.h&quot;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Then find <code>createRuntime</code> method and add following lines to it
+<strong>after</strong> cocos2d registration:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='objective-c'><span class='line'><span class="cp">#if JSB_INCLUDE_CCSCROLLVIEW</span>
+</span><span class='line'>    <span class="n">jsb_register_CCScrollView</span><span class="p">(</span><span class="n">_cx</span><span class="p">,</span> <span class="n">_object</span><span class="p">);</span>
+</span><span class='line'><span class="cp">#endif</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Step 6: Constants file and test:</p>
+
+<p>Add jsb_constants_ccscrollview.js file to resources of your application:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">cc</span><span class="p">.</span><span class="nx">SCROLLVIEW_DIRECTION_HORIZONTAL</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'><span class="nx">cc</span><span class="p">.</span><span class="nx">SCROLLVIEW_DIRECTION_VERTICAL</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span><span class='line'><span class="nx">cc</span><span class="p">.</span><span class="nx">SCROLLVIEW_DIRECTION_BOTH</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Its just the same constants that defined in <code>CCScrollViewDirection</code> enum. jsbindings doesn&#8217;t support enums,
+so all constants should be redefined in JS.</p>
+
+<p>Now its time to test the results. Replace <code>Resources/main.js</code> file content with the following code:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;jsb_constants.js&quot;</span><span class="p">);</span>
+</span><span class='line'><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;jsb_constants_ccscrollview.js&quot;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">var</span> <span class="nx">MainLayer</span> <span class="o">=</span> <span class="nx">cc</span><span class="p">.</span><span class="nx">Layer</span><span class="p">.</span><span class="nx">extend</span><span class="p">({</span>
+</span><span class='line'>    <span class="nx">ctor</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">cc</span><span class="p">.</span><span class="nx">associateWithNative</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">cc</span><span class="p">.</span><span class="nx">Layer</span><span class="p">);</span>
+</span><span class='line'>        <span class="k">this</span><span class="p">.</span><span class="nx">init</span><span class="p">();</span>
+</span><span class='line'>        <span class="kd">var</span> <span class="nx">winSize</span> <span class="o">=</span> <span class="nx">cc</span><span class="p">.</span><span class="nx">Director</span><span class="p">.</span><span class="nx">getInstance</span><span class="p">().</span><span class="nx">getWinSize</span><span class="p">();</span>
+</span><span class='line'>        <span class="kd">var</span> <span class="nx">container</span> <span class="o">=</span> <span class="nx">cc</span><span class="p">.</span><span class="nx">LayerGradient</span><span class="p">.</span><span class="nx">create</span><span class="p">(</span><span class="nx">cc</span><span class="p">.</span><span class="nx">c4b</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">),</span>
+</span><span class='line'>                                                <span class="nx">cc</span><span class="p">.</span><span class="nx">c4b</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">));</span>
+</span><span class='line'>        <span class="nx">container</span><span class="p">.</span><span class="nx">setContentSize</span><span class="p">(</span><span class="nx">cc</span><span class="p">.</span><span class="nx">size</span><span class="p">(</span><span class="nx">winSize</span><span class="p">.</span><span class="nx">width</span><span class="p">,</span> <span class="mi">1000</span><span class="p">));</span>
+</span><span class='line'>        <span class="kd">var</span> <span class="nx">scrollView</span> <span class="o">=</span> <span class="nx">cc</span><span class="p">.</span><span class="nx">ScrollView</span><span class="p">.</span><span class="nx">create</span><span class="p">(</span><span class="nx">winSize</span><span class="p">,</span> <span class="nx">container</span><span class="p">);</span>
+</span><span class='line'>        <span class="nx">scrollView</span><span class="p">.</span><span class="nx">setDirection</span><span class="p">(</span><span class="nx">cc</span><span class="p">.</span><span class="nx">SCROLLVIEW_DIRECTION_VERTICAL</span><span class="p">);</span>
+</span><span class='line'>        <span class="k">this</span><span class="p">.</span><span class="nx">addChild</span><span class="p">(</span><span class="nx">scrollView</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="kd">function</span> <span class="nx">run</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="kd">var</span> <span class="nx">scene</span> <span class="o">=</span> <span class="nx">cc</span><span class="p">.</span><span class="nx">Scene</span><span class="p">.</span><span class="nx">create</span><span class="p">();</span>
+</span><span class='line'>    <span class="kd">var</span> <span class="nx">layer</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">MainLayer</span><span class="p">();</span>
+</span><span class='line'>    <span class="nx">scene</span><span class="p">.</span><span class="nx">addChild</span><span class="p">(</span> <span class="nx">layer</span> <span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nx">cc</span><span class="p">.</span><span class="nx">Director</span><span class="p">.</span><span class="nx">getInstance</span><span class="p">().</span><span class="nx">runWithScene</span><span class="p">(</span> <span class="nx">scene</span> <span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">run</span><span class="p">();</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>If everything was done right, you should see nice scrolling and bouncing gradient.</p>
+
+<h2>The end</h2>
+
+<p>First part of tutorial is over, code can be found on <a href="https://github.com/SevInf/CCScrollView">GitHub</a>, but it
+uses different folder structure. Next time we&#8217;ll dive into manual binding process and allow CCScrollView to have
+JavaScript delegate.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Esprima tutorial]]></title>
