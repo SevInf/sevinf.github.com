@@ -3,7 +3,7 @@ layout: post
 title: "Extending cocos2d JS bindings. Part 1: automatic bindings"
 date: 2012-12-01 11:07
 comments: true
-categories: Objective-C, iOS, cocos2d, javascript
+categories: objective-c ios cocos2d javascript
 ---
 
 Since version 2.1 [cocos2d-iphone](http://www.cocos2d-iphone.org) comes with ability to write code in JavaScript.
